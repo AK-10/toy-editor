@@ -1,3 +1,7 @@
+use std::io::{stdin, Read};
+
 fn main() {
-    println!("Hello, world!");
+    while let Some(b) = stdin().bytes().next() {
+        println!("b: {:?}", b);
+    }
 }
