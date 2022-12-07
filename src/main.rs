@@ -33,10 +33,13 @@ fn main() {
     let mut term = Terminal::new();
     term.enable_raw_mode();
 
-    text.iter().for_each(|row| {
-        println!("{}", row);
+    text.iter().enumerate().for_each(|(i, row)| {
+        print!("{}", row);
+        if i != text.len() - 1 {
+            print!("\x1b[E");
+        }
+        let _ = stdout().flush();
     });
-
 
     while let Some(b) = stdin().bytes().next() {
         // control + qで離脱
