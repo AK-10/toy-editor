@@ -1,4 +1,5 @@
 ## Rawモードの有効化
+この章では入力について触れていきます
 ターミナルにはモードがあり、デフォルトではcanonicalモードになっています。
 canonicalモードは行単位での入力となっており、enter(<LF>)などの入力を受け取ったタイミングで文字入力が完了となります。
 
@@ -120,7 +121,7 @@ rawモードではシグナルなどを送らないようにして文字入力�
     カノニカルモードを有効にする
     特殊文字EOF, EOL, EOL2, ERASE, KILL, LNEXT, REPRINT, STATUS, WERASE 行単位バッファが有効になる。(行単位入力)
   - ISIG:
-    INTR, QUIT, SUSP, DSUSP の文字を受信した時,対応するシグナルを発生させる。
+    INTR(control + c), QUIT(control + \), SUSP, DSUSP の文字を受信した時,対応するシグナルを発生させる。
   - IEXTEN:
     実装依存の入力処理を有効にする
 - c_cflag: 制御モードフラグ
@@ -135,7 +136,72 @@ rawモードではシグナルなどを送らないようにして文字入力�
 control付きの文字(制御文字)は文字コードの0~31(0000_0000 ~ 0001_1111)に割り当てられています
 control + qであれば17になります
 これを判定するために `control_char` という関数を定義します
+https://github.com/AK-10/toy-editor/pull/1/commits/6f62d565c256c0f63d4ba559c5f48cd4bc627906
+
+## テキストを表示する
+この章では引数で指定したファイルを表示するようにします
+
+まずファイルパスを受け取り、ファイルの内容を取得部分を作成します
+// commit を貼る
+ファイルの内容は一旦Vec<String>として保持しておきます
+これをそのままプリントすると以下のようになります
+// commitを貼る
+```
+❯❯❯ cargo run -- examples/hello.txt
+   Compiling toy-editor v0.1.0 (/home/ak-10/works/toy-editor)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.21s
+     Running `target/debug/toy-editor examples/hello.txt`
+Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+                                                        sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                                                                                                                          Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+                                                                     Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+           Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+```
+
+残念ながらrawモードではプリントを行ったあと、カーソルの行の位置がリセットされないため、次の列のプリントが前の行の文字数分スペースが入ってしまいます。
+これを回避するためにカーソルを次の行の先頭に移動させる必要があります。
+どうすればよいでしょうか？
+
+ターミナルはエスケープシーケンスを使うことで制御できます。
+例えば、カーソルの移動は
+- 上: \x1b[A
+- 下: \x1b[B
+- 右: \x1b[C
+- 左: \x1b[D
+を入力することでカーソルを移動させることができます(\x1bはescを表します)
+エスケープシーケンスについてはhttps://www.csie.ntu.edu.tw/~r92094/c++/VT100.htmlで確認できます
+表を見てみると、\x1b[Eで次の行の先頭にカーソルを動かすことができそうです。
+実際にやってみましょう
 // commit を貼る
 
+```
+~/w/toy-editor ❮ 22-12-08 0:49:50 ❯
+❯❯❯ cargo run -- examples/hello.txt
+   Compiling toy-editor v0.1.0 (/home/ak-10/works/toy-editor)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.20s
+     Running `target/debug/toy-editor examples/hello.txt`
+Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+```
 
+想定通りの出力になりました。
+
+このように、ターミナルで動くエディタでは、エスケープシーケンスをうまく利用して、文字出力をしたり、キー入力とエスケープシーケンスを対応させることで動作を作っていきます
+
+実際のエディタを考えてみると、
+```
+❯❯❯ cargo run -- examples/hello.txt
+   Compiling toy-editor v0.1.0 (/home/ak-10/works/toy-editor)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.20s
+     Running `target/debug/toy-editor examples/hello.txt
+```
+のような、コマンドを実行したときの出力が残ると困ります。
+また、ターミナルの先頭から出力するために、カーソルを左上に移動させる必要があります
+
+画面のクリアには`\x1b[2J`, カーソルを左上に移動させるには`x1b[H`を使います
+これをテキストを出力前に出力すれば良さそうです。
+// commitを貼る
 
