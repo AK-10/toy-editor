@@ -1,4 +1,4 @@
-use std::io::{stdin, Read};
+use std::io::{stdin, Read, stdout, Write};
 use std::env;
 use std::fs::File;
 
@@ -32,6 +32,11 @@ fn main() {
 
     let mut term = Terminal::new();
     term.enable_raw_mode();
+
+    text.iter().for_each(|row| {
+        println!("{}", row);
+    });
+
 
     while let Some(b) = stdin().bytes().next() {
         // control + qで離脱
