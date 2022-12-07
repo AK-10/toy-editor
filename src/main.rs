@@ -33,6 +33,12 @@ fn main() {
     let mut term = Terminal::new();
     term.enable_raw_mode();
 
+    // 画面全体をクリア
+    print!("\x1b[2J");
+    // カーソルを左上(ホームポジション)に移動
+    print!("\x1b[H");
+    let _ = stdout().flush();
+
     text.iter().enumerate().for_each(|(i, row)| {
         print!("{}", row);
         if i != text.len() - 1 {

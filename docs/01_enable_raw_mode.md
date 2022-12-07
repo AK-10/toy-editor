@@ -199,8 +199,9 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
      Running `target/debug/toy-editor examples/hello.txt
 ```
 のような、コマンドを実行したときの出力が残ると困ります。
-なので、すでに出力された文字列はクリアしてしまいましょう。
+また、ターミナルの先頭から出力するために、カーソルを左上に移動させる必要があります
 
-使えそうなエスケープシーケンスは`\x1b[2J` です。
+画面のクリアには`\x1b[2J`, カーソルを左上に移動させるには`x1b[H`を使います
 これをテキストを出力前に出力すれば良さそうです。
+// commitを貼る
 
