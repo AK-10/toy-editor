@@ -8,6 +8,7 @@ canonicalモードは行単位での入力となっており、enter(<LF>)など
 
 まずcanonicalモードでの入力を試してみます。
 https://github.com/AK-10/toy-editor/pull/1/commits/f3ffc49197ea053c1fdb9ff45cc4bc5c9d61fdbe
+
 このようなコードを書いてみました
 
 これを実行して雑に入力してみます
@@ -42,8 +43,8 @@ terminalはtermiosという構造体を利用して制御することができ�
 - 各フラグをrawモードにするために更新
 - 更新したtermiosをもとにターミナルの状態を更新
 となります。
+https://github.com/AK-10/toy-editor/pull/1/commits/817ceef2a06c63f927104591f68d03889d325c6e
 
-// commitを貼る
 挙動を確認してみましょう
 canonicalモードと同じような操作をすると以下のような出力になりました
 
@@ -142,10 +143,12 @@ https://github.com/AK-10/toy-editor/pull/1/commits/6f62d565c256c0f63d4ba559c5f48
 この章では引数で指定したファイルを表示するようにします
 
 まずファイルパスを受け取り、ファイルの内容を取得部分を作成します
-// commit を貼る
+https://github.com/AK-10/toy-editor/pull/2/commits/ceec7118a0bf50e7a86ab874c8e2a0470b8db054
+
 ファイルの内容は一旦Vec<String>として保持しておきます
 これをそのままプリントすると以下のようになります
-// commitを貼る
+https://github.com/AK-10/toy-editor/pull/2/commits/1d0edda76e67199e3140a6ad29bd6a80c26c24a2
+
 ```
 ❯❯❯ cargo run -- examples/hello.txt
    Compiling toy-editor v0.1.0 (/home/ak-10/works/toy-editor)
@@ -172,7 +175,7 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit,
 エスケープシーケンスについてはhttps://www.csie.ntu.edu.tw/~r92094/c++/VT100.htmlで確認できます
 表を見てみると、\x1b[Eで次の行の先頭にカーソルを動かすことができそうです。
 実際にやってみましょう
-// commit を貼る
+https://github.com/AK-10/toy-editor/pull/2/commits/93ea3783001fd82f8d7089b275232432477b16a0
 
 ```
 ~/w/toy-editor ❮ 22-12-08 0:49:50 ❯
@@ -203,5 +206,8 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
 
 画面のクリアには`\x1b[2J`, カーソルを左上に移動させるには`x1b[H`を使います
 これをテキストを出力前に出力すれば良さそうです。
-// commitを貼る
+https://github.com/AK-10/toy-editor/pull/2/commits/bd4c2130920ab60b018d1bf0997a17e1fee2f8f4
 
+あとは適当にリファクタしておきます
+https://github.com/AK-10/toy-editor/pull/2/commits/8300c14817275155910696f4709fee5309d67360
+https://github.com/AK-10/toy-editor/pull/2/commits/e29d080a71c6031d580bc5ac236e00ee87be85b6
