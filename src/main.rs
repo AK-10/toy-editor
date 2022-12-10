@@ -1,8 +1,10 @@
 use std::io::{stdin, Read, stdout, Write};
 use std::env;
-use std::fs::File;
 
-use toy_editor::terminal::Terminal;
+use toy_editor::{
+    terminal::Terminal,
+    text::Text
+};
 
 fn control_char(c: char) -> u8 {
     (c as u8) & 0b0001_1111
@@ -13,22 +15,7 @@ fn main() {
         .nth(1)
         .expect("expected file path to first arg, but nothing");
 
-    let file = match File::open(path) {
-        Ok(ref mut f) => {
-            let mut buf = String::with_capacity(4096);
-            if let Ok(_) = f.read_to_string(&mut buf) {
-                buf
-            } else {
-                std::process::exit(1)
-            }
-        }
-        Err(_) => std::process::exit(1)
-    };
-
-    let text: Vec<String> = file
-        .lines()
-        .map(String::from)
-        .collect();
+    let text = Text::from_path(path).expect("expected open file, and read content");
 
     let mut term = Terminal::new();
     term.enable_raw_mode();
