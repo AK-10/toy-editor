@@ -4,12 +4,14 @@ use std::env;
 use toy_editor::{
     terminal::Terminal,
     text::Text,
-    renderer::Renderer
+    renderer::{Renderer, Key}
 };
 
 fn control_char(c: char) -> u8 {
     (c as u8) & 0b0001_1111
 }
+
+
 
 fn main() {
     let path = env::args()
@@ -29,13 +31,13 @@ fn main() {
             if b == control_char('q') {
                 break
             } else if b == control_char('h') {
-                println!("left");
+                let _ = renderer.move_cursor(Key::Left);
             } else if b == control_char('j') {
-                println!("down");
+                let _ = renderer.move_cursor(Key::Down);
             } else if b == control_char('k') {
-                println!("up");
+                let _ = renderer.move_cursor(Key::Up);
             } else if b == control_char('l') {
-                println!("right");
+                let _ = renderer.move_cursor(Key::Right);
             }
         }
     }

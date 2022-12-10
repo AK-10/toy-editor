@@ -29,6 +29,13 @@ impl fmt::Display for Error {
     }
 }
 
+pub enum Key {
+    Left,
+    Down,
+    Up,
+    Right
+}
+
 impl Renderer {
     pub fn new(text: Text) -> Self {
         Self {
@@ -41,15 +48,30 @@ impl Renderer {
         print!("\x1b[2J");
         // カーソルを左上(ホームポジション)に移動
         print!("\x1b[H");
-        stdout().flush()?;
 
         for (i, row) in self.text.rows().iter().enumerate() {
             print!("{}", row);
             if i != self.text.rows().len() - 1 {
                 print!("\x1b[E");
             }
-            stdout().flush()?;
         }
+        // カーソルを左上(ホームポジション)に移動
+        print!("\x1b[H");
+        stdout().flush()?;
+
+        Ok(())
+    }
+
+    pub fn move_cursor(&self, key: Key) -> Result<(), Error> {
+        let sequence = match key {
+            Key::Left => "\x1b[D",
+            Key::Down => "\x1b[B",
+            Key::Up => "\x1b[A",
+            Key::Right => "\x1b[C"
+        };
+
+        print!("{}", sequence);
+        stdout().flush()?;
 
         Ok(())
     }
