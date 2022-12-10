@@ -27,7 +27,6 @@ impl Terminal {
         let mut term = self.original_term.clone();
         unsafe {
             // 何故かうまく行かない
-            //
             // libc::cfmakeraw(&mut term);
 
             term.c_iflag &= !(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
