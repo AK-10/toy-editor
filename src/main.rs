@@ -11,8 +11,6 @@ fn control_char(c: char) -> u8 {
     (c as u8) & 0b0001_1111
 }
 
-
-
 fn main() {
     let path = env::args()
         .nth(1)
