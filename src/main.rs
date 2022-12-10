@@ -1,4 +1,4 @@
-use std::io::{stdin, Read, stdout, Write};
+use std::io::{stdin, Read};
 use std::env;
 
 use toy_editor::{
@@ -28,6 +28,14 @@ fn main() {
         if let Ok(b) = b {
             if b == control_char('q') {
                 break
+            } else if b == control_char('h') {
+                println!("left");
+            } else if b == control_char('j') {
+                println!("down");
+            } else if b == control_char('k') {
+                println!("up");
+            } else if b == control_char('l') {
+                println!("right");
             }
         }
     }

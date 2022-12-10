@@ -211,3 +211,18 @@ https://github.com/AK-10/toy-editor/pull/2/commits/bd4c2130920ab60b018d1bf0997a1
 あとは適当にリファクタしておきます
 https://github.com/AK-10/toy-editor/pull/2/commits/8300c14817275155910696f4709fee5309d67360
 https://github.com/AK-10/toy-editor/pull/2/commits/e29d080a71c6031d580bc5ac236e00ee87be85b6
+
+## カーソルの移動
+この章ではカーソル移動を実装していきます
+
+まず、適用にカーソル移動に利用するキーを決めます
+私はよくvimを使うので
+- ctrl + h: 左
+- ctrl + j: 下
+- ctrl + k: 上
+- ctrl + l: 右
+のようにカーソル移動するようにします
+
+まず各入力を受け入れるようにしましょう
+入力を受け取る処理はすでに実装しているので、対応する分岐を書くだけで良いです
+// commit を貼る
