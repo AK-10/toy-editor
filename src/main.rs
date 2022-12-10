@@ -3,7 +3,8 @@ use std::env;
 
 use toy_editor::{
     terminal::Terminal,
-    text::Text
+    text::Text,
+    renderer::Renderer
 };
 
 fn control_char(c: char) -> u8 {
@@ -16,23 +17,11 @@ fn main() {
         .expect("expected file path to first arg, but nothing");
 
     let text = Text::from_path(path).expect("expected open file, and read content");
+    let renderer = Renderer::new(text);
+    renderer.render().expect("expect render");
 
     let mut term = Terminal::new();
     term.enable_raw_mode();
-
-    // 画面全体をクリア
-    print!("\x1b[2J");
-    // カーソルを左上(ホームポジション)に移動
-    print!("\x1b[H");
-    let _ = stdout().flush();
-
-    text.iter().enumerate().for_each(|(i, row)| {
-        print!("{}", row);
-        if i != text.len() - 1 {
-            print!("\x1b[E");
-        }
-        let _ = stdout().flush();
-    });
 
     while let Some(b) = stdin().bytes().next() {
         // control + qで離脱
@@ -42,6 +31,4 @@ fn main() {
             }
         }
     }
-
-
 }

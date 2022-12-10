@@ -1,18 +1,26 @@
 use std::fs::File;
-use std::io::Read;
+use std::io::{self, Read};
 use std::{error, fmt};
 
-type Row = String;
+pub type Row = String;
 
 #[derive(Debug)]
 pub struct Text {
     path: String,
-    text: Vec<Row>
+    rows: Vec<Row>
 }
 
 #[derive(Debug)]
 pub enum Error {
     OpenError(String)
+}
+
+impl error::Error for Error {}
+
+impl From<io::Error> for Error {
+    fn from(value: std::io::Error) -> Self {
+        Error::OpenError(value.to_string())
+    }
 }
 
 impl fmt::Display for Error {
@@ -25,31 +33,24 @@ impl fmt::Display for Error {
     }
 }
 
-impl error::Error for Error {}
-
 impl Text {
     pub fn from_path(path: String) -> Result<Self, Error> {
-        let file = match File::open(&path) {
-            Ok(ref mut f) => {
-                let mut buf = String::with_capacity(4096);
-                match f.read_to_string(&mut buf) {
-                    Ok(_) => buf,
-                    Err(e) => return Err(Error::OpenError(e.to_string()))
-                }
-            }
-            Err(e) => return Err(Error::OpenError(e.to_string()))
-        };
+        let mut file = File::open(&path)?;
+        let mut buf = String::with_capacity(4096);
+        file.read_to_string(&mut buf)?;
 
-        let text: Vec<String> = file
+        let rows: Vec<String> = buf
             .lines()
             .map(Row::from)
             .collect();
 
         Ok(Self {
             path,
-            text
+            rows
         })
     }
 
-
+    pub fn rows(&self) -> &Vec<Row> {
+        &self.rows
+    }
 }
