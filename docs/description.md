@@ -215,7 +215,7 @@ https://github.com/AK-10/toy-editor/pull/2/commits/e29d080a71c6031d580bc5ac236e0
 ## カーソルの移動
 この章ではカーソル移動を実装していきます
 
-まず、適用にカーソル移動に利用するキーを決めます
+まず、テキトーにカーソル移動に利用するキーを決めます
 私はよくvimを使うので
 - ctrl + h: 左
 - ctrl + j: 下
@@ -225,7 +225,7 @@ https://github.com/AK-10/toy-editor/pull/2/commits/e29d080a71c6031d580bc5ac236e0
 
 まず各入力を受け入れるようにしましょう
 入力を受け取る処理はすでに実装しているので、対応する分岐を書くだけで良いです
-// commit を貼る
+https://github.com/AK-10/toy-editor/pull/3/commits/1c81cca0f663dc209cb76afb4abf15cb9be549fe
 
 入力を受け取ったらctrl + hjklに対応するエスケープシーケンスを出力する必要があります
 カーソルを一つ移動させるエスケープシーケンスは
@@ -236,7 +236,7 @@ https://github.com/AK-10/toy-editor/pull/2/commits/e29d080a71c6031d580bc5ac236e0
 
 になります。
 これをそのまま標準出力に吐けば良いです
-// commitを貼る
+https://github.com/AK-10/toy-editor/pull/3/commits/e4c454a430be56bdbab0bf915ef77c786779a13f
 
 これでカーソル移動ができるようになりました。
 エディタっぽくなってきましたね。
@@ -248,6 +248,24 @@ https://github.com/AK-10/toy-editor/pull/2/commits/e29d080a71c6031d580bc5ac236e0
 - カーソルの位置とテキストの位置を対応させる
 - カーソル移動入力を受け取ったときに、テキストの行と列の範囲を超えないかチェックし、超えない範囲であれば移動する
 を実装すれば、良さそうです
+https://github.com/AK-10/toy-editor/pull/3/commits/b32e027153f0e70268aae8ae44c0abe55768ce11
 
-// commitを貼る
+注意点としては、カーソルの上下移動をしようとしたとき、単純にカーソルを上下に移動させただけでは文字範囲からはみ出すことがあります
 
+例として以下のようなテキストを考えます
+```
+short line.
+loooooooooong line!
+                  ^ ここにカーソルが存在する
+```
+この状態で単にカーソルを上に移動させようとすると
+
+```
+short line.
+                  ^ ここにカーソルが移動する
+loooooooooong line!
+```
+このようになります
+これでは文字列の範囲を超えてしまうので、カーソルの列を移動後の文字列の末尾に移動させるようにします
+また、これによってカーソルの移動に `\x1b[A`, `\x1b[B`, `\x1b[C`, `\x1b[D`を使うのは適切ではないので、他のエスケープシーケンスを使ったほうが良さそうです
+`\x1b[v;hH` を利用するのが良さそうなので、こちらに変更します
