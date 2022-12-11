@@ -1,10 +1,11 @@
-use std::io::{stdin, Read, stdout, Write};
+use std::io::{stdin, Read};
 use std::env;
 
 use toy_editor::{
     terminal::Terminal,
     text::Text,
-    renderer::Renderer
+    renderer::Renderer,
+    pane::Pane
 };
 
 fn control_char(c: char) -> u8 {
@@ -17,7 +18,8 @@ fn main() {
         .expect("expected file path to first arg, but nothing");
 
     let text = Text::from_path(path).expect("expected open file, and read content");
-    let renderer = Renderer::new(text);
+    let mut pane = Pane::new(&text);
+    let renderer = Renderer::new(&text);
     renderer.render().expect("expect render");
 
     let mut term = Terminal::new();
@@ -28,6 +30,22 @@ fn main() {
         if let Ok(b) = b {
             if b == control_char('q') {
                 break
+            } else if b == control_char('h') {
+                if let Ok(pos) = pane.decrement_col() {
+                    let _ = renderer.move_cursor(pos);
+                }
+            } else if b == control_char('j') {
+                if let Ok(pos) = pane.increment_row() {
+                    let _ = renderer.move_cursor(pos);
+                }
+            } else if b == control_char('k') {
+                if let Ok(pos) = pane.decrement_row() {
+                    let _ = renderer.move_cursor(pos);
+                }
+            } else if b == control_char('l') {
+                if let Ok(pos) = pane.increment_col() {
+                    let _ = renderer.move_cursor(pos);
+                }
             }
         }
     }

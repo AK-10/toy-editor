@@ -2,8 +2,8 @@ use crate::text::Text;
 use std::{error, fmt};
 use std::io::{self, stdout, Write};
 
-pub struct Renderer {
-    text: Text,
+pub struct Renderer<'a> {
+    text: &'a Text,
 }
 
 #[derive(Debug)]
@@ -29,8 +29,8 @@ impl fmt::Display for Error {
     }
 }
 
-impl Renderer {
-    pub fn new(text: Text) -> Self {
+impl<'a> Renderer<'a> {
+    pub fn new(text: &'a Text) -> Self {
         Self {
             text
         }
@@ -41,15 +41,29 @@ impl Renderer {
         print!("\x1b[2J");
         // カーソルを左上(ホームポジション)に移動
         print!("\x1b[H");
-        stdout().flush()?;
 
         for (i, row) in self.text.rows().iter().enumerate() {
             print!("{}", row);
             if i != self.text.rows().len() - 1 {
                 print!("\x1b[E");
             }
-            stdout().flush()?;
         }
+        // カーソルを左上(ホームポジション)に移動
+        print!("\x1b[H");
+        stdout().flush()?;
+
+        Ok(())
+    }
+
+    pub fn move_cursor(&self, pos: (usize, usize)) -> Result<(), Error> {
+        // カーソルの位置を変更する
+        // \x1b[{行};{列}H
+        // ターミナルは(1, 1)から始まる
+        // 一方で受け取るposは0を基準とした値になるため、+1したものを出力する
+        let sequence = format!("\x1b[{};{}H", pos.0 + 1, pos.1 + 1);
+
+        print!("{}", sequence);
+        stdout().flush()?;
 
         Ok(())
     }
