@@ -4,7 +4,8 @@ use std::env;
 use toy_editor::{
     terminal::Terminal,
     text::Text,
-    renderer::{Renderer, Key}
+    renderer::Renderer,
+    pane::Pane
 };
 
 fn control_char(c: char) -> u8 {
@@ -17,7 +18,8 @@ fn main() {
         .expect("expected file path to first arg, but nothing");
 
     let text = Text::from_path(path).expect("expected open file, and read content");
-    let renderer = Renderer::new(text);
+    let mut pane = Pane::new(&text);
+    let renderer = Renderer::new(&text);
     renderer.render().expect("expect render");
 
     let mut term = Terminal::new();
@@ -29,13 +31,21 @@ fn main() {
             if b == control_char('q') {
                 break
             } else if b == control_char('h') {
-                let _ = renderer.move_cursor(Key::Left);
+                if let Ok(pos) = pane.decrement_col() {
+                    let _ = renderer.move_cursor(pos);
+                }
             } else if b == control_char('j') {
-                let _ = renderer.move_cursor(Key::Down);
+                if let Ok(pos) = pane.increment_row() {
+                    let _ = renderer.move_cursor(pos);
+                }
             } else if b == control_char('k') {
-                let _ = renderer.move_cursor(Key::Up);
+                if let Ok(pos) = pane.decrement_row() {
+                    let _ = renderer.move_cursor(pos);
+                }
             } else if b == control_char('l') {
-                let _ = renderer.move_cursor(Key::Right);
+                if let Ok(pos) = pane.increment_col() {
+                    let _ = renderer.move_cursor(pos);
+                }
             }
         }
     }
