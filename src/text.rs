@@ -12,7 +12,8 @@ pub struct Text {
 
 #[derive(Debug)]
 pub enum Error {
-    OpenError(String)
+    OpenError(String),
+    ModifyError(String)
 }
 
 impl error::Error for Error {}
@@ -26,9 +27,9 @@ impl From<io::Error> for Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
-            Self::OpenError(msg) => {
-                write!(f, "text open error: {}", msg)
-            }
+            Self::OpenError(msg) => write!(f, "open file error: {}", msg),
+            Self::ModifyError(msg) => write!(f, "modify text error: {}", msg)
+
         }
     }
 }
@@ -52,5 +53,14 @@ impl Text {
 
     pub fn rows(&self) -> &Vec<Row> {
         &self.rows
+    }
+
+    pub fn insert(&mut self, pos: (usize, usize), ch: char) -> Result<(), Error> {
+        if pos.0 > self.rows.len() {
+            let msg = format!("out of range. rows len: {}, pos: {}", self.rows.len(), pos.0);
+            return Err(Error::ModifyError(msg.into()));
+        }
+        self.rows[pos.0].insert(pos.1, ch);
+        Ok(())
     }
 }

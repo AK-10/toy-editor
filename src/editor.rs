@@ -60,14 +60,22 @@ impl Editor {
                 b if b == control_char('l') => {
                     let _ = self.pane.increment_col();
                 }
-                _ => {
-                    continue
+                b if (b as char).is_alphabetic() => {
+                    self.insert(b)?;
                 }
+                _ => continue
             }
 
             self.renderer.render(false)?;
             self.renderer.move_cursor(self.pane.current_pos())?;
         }
+
+        Ok(())
+    }
+
+    pub fn insert(&mut self, b: u8) -> Result<(), Box<dyn error::Error>> {
+        self.text.borrow_mut().insert(self.pane.current_pos(), b as char)?;
+        self.pane.increment_col()?;
 
         Ok(())
     }
