@@ -1,6 +1,6 @@
 use crate::{
     renderer::Renderer,
-    text::Text,
+    text::{Text, DeleteStatus},
     pane::Pane,
     terminal::Terminal
 };
@@ -60,8 +60,14 @@ impl Editor {
                 b if b == control_char('l') => {
                     let _ = self.pane.increment_col();
                 }
-                b if (b as char).is_alphabetic() => {
+                // 英数、記号のみ入力できるようにする
+                b if (b as char).is_ascii_alphanumeric() => {
                     self.insert(b)?;
+                }
+                // backspace (制御文字的にはDEL)
+                b'\x7F' => {
+                    self.delete()?;
+
                 }
                 _ => continue
             }
@@ -75,7 +81,21 @@ impl Editor {
 
     pub fn insert(&mut self, b: u8) -> Result<(), Box<dyn error::Error>> {
         self.text.borrow_mut().insert(self.pane.current_pos(), b as char)?;
-        self.pane.increment_col()?;
+        let _ = self.pane.increment_col()?;
+
+        Ok(())
+    }
+
+    pub fn delete(&mut self) -> Result<(), Box<dyn error::Error>> {
+        match self.text.borrow_mut().delete(self.pane.current_pos())? {
+            DeleteStatus::Nop => {},
+            DeleteStatus::DeleteChar => {
+                let _ = self.pane.decrement_col();
+            },
+            DeleteStatus::DeleteRow(row, col) => {
+                self.pane.move_to((row, col));
+            }
+        }
 
         Ok(())
     }

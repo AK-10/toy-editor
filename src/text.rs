@@ -16,6 +16,12 @@ pub enum Error {
     ModifyError(String)
 }
 
+pub enum DeleteStatus {
+    Nop,
+    DeleteChar,
+    DeleteRow(usize, usize),
+}
+
 impl error::Error for Error {}
 
 impl From<io::Error> for Error {
@@ -56,11 +62,50 @@ impl Text {
     }
 
     pub fn insert(&mut self, pos: (usize, usize), ch: char) -> Result<(), Error> {
-        if pos.0 > self.rows.len() {
-            let msg = format!("out of range. rows len: {}, pos: {}", self.rows.len(), pos.0);
+        self.validate_position(pos)?;
+
+        self.rows[pos.0].insert(pos.1, ch);
+        Ok(())
+    }
+
+    //
+    pub fn delete(&mut self, pos: (usize, usize)) -> Result<DeleteStatus, Error> {
+        self.validate_position(pos)?;
+        match pos {
+            (0, 0) => {
+                // nop
+                // 削除対象がないため、何もしない
+                Ok(DeleteStatus::Nop)
+            }
+            (_, 0) => {
+                // 先頭の削除は、前の行と今の行の連結を行う
+                let removed_row = self.rows.remove(pos.0);
+                let prev_row = &mut self.rows[pos.0 - 1];
+                let prev_row_len = prev_row.len();
+                prev_row.push_str(&removed_row);
+
+                // 連結したあとの先頭の位置を返す
+                Ok(DeleteStatus::DeleteRow(pos.0 - 1, prev_row_len))
+            }
+            _ => {
+                self.rows[pos.0].remove(pos.1 - 1);
+                Ok(DeleteStatus::DeleteChar)
+            }
+        }
+    }
+
+    fn validate_position(&self, pos: (usize, usize)) -> Result<(), Error> {
+        if pos.0 >= self.rows.len() {
+            let msg = format!("row is out of range. rows len: {}, row pos: {}", self.rows.len(), pos.0);
             return Err(Error::ModifyError(msg.into()));
         }
-        self.rows[pos.0].insert(pos.1, ch);
+
+        let row = &self.rows[pos.0];
+        if pos.1 > row.len() {
+            let msg = format!("col is out of range. row len: {}, col pos: {}", row.len(), pos.0);
+            return Err(Error::ModifyError(msg.into()));
+        }
+
         Ok(())
     }
 }

@@ -107,4 +107,8 @@ impl Pane {
             Err(Error::ModifyPositionError("decrement_col is unable at the cursor on first of col".into()))
         }
     }
+
+    pub fn move_to(&mut self, pos: (usize, usize)) {
+        self.position = pos.into()
+    }
 }
