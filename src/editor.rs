@@ -18,7 +18,6 @@ pub struct Editor {
     renderer: Renderer,
     pane: Pane,
     reader: Terminal
-
 }
 
 impl Editor {
@@ -60,14 +59,17 @@ impl Editor {
                 b if b == control_char('l') => {
                     let _ = self.pane.increment_col();
                 }
-                // 英数、記号のみ入力できるようにする
-                b if (b as char).is_ascii_alphanumeric() => {
-                    self.insert(b)?;
-                }
                 // backspace (制御文字的にはDEL)
                 b'\x7F' => {
                     self.delete()?;
-
+                }
+                // enter
+                b'\r' => {
+                    self.insert_row()?;
+                }
+                // 英数、記号のみ入力できるようにする
+                b if (b as char).is_ascii() => {
+                    self.insert(b)?;
                 }
                 _ => continue
             }
@@ -79,14 +81,14 @@ impl Editor {
         Ok(())
     }
 
-    pub fn insert(&mut self, b: u8) -> Result<(), Box<dyn error::Error>> {
+    fn insert(&mut self, b: u8) -> Result<(), Box<dyn error::Error>> {
         self.text.borrow_mut().insert(self.pane.current_pos(), b as char)?;
         let _ = self.pane.increment_col()?;
 
         Ok(())
     }
 
-    pub fn delete(&mut self) -> Result<(), Box<dyn error::Error>> {
+    fn delete(&mut self) -> Result<(), Box<dyn error::Error>> {
         match self.text.borrow_mut().delete(self.pane.current_pos())? {
             DeleteStatus::Nop => {},
             DeleteStatus::DeleteChar => {
@@ -96,6 +98,14 @@ impl Editor {
                 self.pane.move_to((row, col));
             }
         }
+
+        Ok(())
+    }
+
+    fn insert_row(&mut self) -> Result<(), Box<dyn error::Error>> {
+        let cur_pos = self.pane.current_pos();
+        self.text.borrow_mut().insert_row(cur_pos)?;
+        self.pane.move_to((cur_pos.0 + 1, 0));
 
         Ok(())
     }

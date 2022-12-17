@@ -94,6 +94,22 @@ impl Text {
         }
     }
 
+    pub fn insert_row(&mut self, pos: (usize, usize)) -> Result<(), Error> {
+        self.validate_position(pos)?;
+        if let Some(row) = self.rows.get_mut(pos.0) {
+            let (head, tail): (String, String) = {
+                let (head, tail) = row.split_at(pos.1);
+
+                (head.into(), tail.into())
+            };
+
+            _ = std::mem::replace(row, head);
+            self.rows.insert(pos.0 + 1, tail);
+
+        }
+        Ok(())
+    }
+
     fn validate_position(&self, pos: (usize, usize)) -> Result<(), Error> {
         if pos.0 >= self.rows.len() {
             let msg = format!("row is out of range. rows len: {}, row pos: {}", self.rows.len(), pos.0);

@@ -1,11 +1,9 @@
-use std::io::{stdin, Read};
 use std::env;
 
 use toy_editor::{
     text::Text,
     editor::Editor
 };
-
 
 fn main() {
     let path = env::args()
