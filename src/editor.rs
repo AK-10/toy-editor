@@ -43,6 +43,8 @@ impl Editor {
             match self.reader.read_key()? {
                 // 終了
                 b if b == control_char('q') => break,
+                // 保存
+                b if b == control_char('s') => self.save()?,
                 // 左
                 b if b == control_char('h') => {
                     let _ = self.pane.decrement_col();
@@ -106,6 +108,12 @@ impl Editor {
         let cur_pos = self.pane.current_pos();
         self.text.borrow_mut().insert_row(cur_pos)?;
         self.pane.move_to((cur_pos.0 + 1, 0));
+
+        Ok(())
+    }
+
+    fn save(&self) -> Result<(), Box<dyn error::Error>> {
+        self.text.borrow().save()?;
 
         Ok(())
     }

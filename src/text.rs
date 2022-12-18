@@ -1,5 +1,5 @@
-use std::fs::File;
-use std::io::{self, Read};
+use std::fs::{File, OpenOptions};
+use std::io::{self, Read, Write};
 use std::{error, fmt};
 
 pub type Row = String;
@@ -59,6 +59,19 @@ impl Text {
 
     pub fn rows(&self) -> &Vec<Row> {
         &self.rows
+    }
+
+    pub fn to_string(&self) -> String {
+        self.rows.join("\n")
+    }
+
+    pub fn save(&self) -> Result<(), Error> {
+        let mut f = OpenOptions::new().write(true).open(&self.path)?;
+        let text = self.to_string();
+        f.set_len(text.len() as u64)?;
+        f.write(text.as_bytes())?;
+
+        Ok(())
     }
 
     pub fn insert(&mut self, pos: (usize, usize), ch: char) -> Result<(), Error> {
