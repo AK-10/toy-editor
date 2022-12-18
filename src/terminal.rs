@@ -1,3 +1,6 @@
+use std::io::{stdin, Read};
+use std::{error, fmt};
+
 use libc::{
     self,
     BRKINT, CS8, CSIZE, ECHO, ECHONL, ICANON, ICRNL, IEXTEN, IGNBRK, IGNCR, INLCR, ISIG, ISTRIP,
@@ -6,6 +9,22 @@ use libc::{
 
 pub struct Terminal {
     original_term: libc::termios
+}
+
+#[derive(Debug)]
+pub enum Error {
+    ReadError(String),
+}
+impl error::Error for Error {}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match &self {
+            Self::ReadError(msg) => {
+                write!(f, "render error: {}", msg)
+            }
+        }
+    }
 }
 
 impl Terminal {
@@ -37,6 +56,14 @@ impl Terminal {
 
             // terminalをrawモードに更新
             libc::tcsetattr(libc::STDIN_FILENO, libc::TCSAFLUSH, &term);
+        }
+    }
+
+    pub fn read_key(&self) -> Result<u8, Error> {
+        match stdin().bytes().next() {
+            Some(Ok(b)) => Ok(b),
+            Some(Err(e)) => Err(Error::ReadError(e.to_string())),
+            None => Err(Error::ReadError("failed reading key input".into()))
         }
     }
 }

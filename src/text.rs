@@ -1,5 +1,5 @@
-use std::fs::File;
-use std::io::{self, Read};
+use std::fs::{File, OpenOptions};
+use std::io::{self, Read, Write};
 use std::{error, fmt};
 
 pub type Row = String;
@@ -12,7 +12,14 @@ pub struct Text {
 
 #[derive(Debug)]
 pub enum Error {
-    OpenError(String)
+    OpenError(String),
+    ModifyError(String)
+}
+
+pub enum DeleteStatus {
+    Nop,
+    DeleteChar,
+    DeleteRow(usize, usize),
 }
 
 impl error::Error for Error {}
@@ -26,9 +33,9 @@ impl From<io::Error> for Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match &self {
-            Self::OpenError(msg) => {
-                write!(f, "text open error: {}", msg)
-            }
+            Self::OpenError(msg) => write!(f, "open file error: {}", msg),
+            Self::ModifyError(msg) => write!(f, "modify text error: {}", msg)
+
         }
     }
 }
@@ -52,5 +59,82 @@ impl Text {
 
     pub fn rows(&self) -> &Vec<Row> {
         &self.rows
+    }
+
+    pub fn to_string(&self) -> String {
+        self.rows.join("\n")
+    }
+
+    pub fn save(&self) -> Result<(), Error> {
+        let mut f = OpenOptions::new().write(true).open(&self.path)?;
+        let text = self.to_string();
+        f.set_len(text.len() as u64)?;
+        f.write(text.as_bytes())?;
+
+        Ok(())
+    }
+
+    pub fn insert(&mut self, pos: (usize, usize), ch: char) -> Result<(), Error> {
+        self.validate_position(pos)?;
+
+        self.rows[pos.0].insert(pos.1, ch);
+        Ok(())
+    }
+
+    //
+    pub fn delete(&mut self, pos: (usize, usize)) -> Result<DeleteStatus, Error> {
+        self.validate_position(pos)?;
+        match pos {
+            (0, 0) => {
+                // nop
+                // 削除対象がないため、何もしない
+                Ok(DeleteStatus::Nop)
+            }
+            (_, 0) => {
+                // 先頭の削除は、前の行と今の行の連結を行う
+                let removed_row = self.rows.remove(pos.0);
+                let prev_row = &mut self.rows[pos.0 - 1];
+                let prev_row_len = prev_row.len();
+                prev_row.push_str(&removed_row);
+
+                // 連結したあとの先頭の位置を返す
+                Ok(DeleteStatus::DeleteRow(pos.0 - 1, prev_row_len))
+            }
+            _ => {
+                self.rows[pos.0].remove(pos.1 - 1);
+                Ok(DeleteStatus::DeleteChar)
+            }
+        }
+    }
+
+    pub fn insert_row(&mut self, pos: (usize, usize)) -> Result<(), Error> {
+        self.validate_position(pos)?;
+        if let Some(row) = self.rows.get_mut(pos.0) {
+            let (head, tail): (String, String) = {
+                let (head, tail) = row.split_at(pos.1);
+
+                (head.into(), tail.into())
+            };
+
+            _ = std::mem::replace(row, head);
+            self.rows.insert(pos.0 + 1, tail);
+
+        }
+        Ok(())
+    }
+
+    fn validate_position(&self, pos: (usize, usize)) -> Result<(), Error> {
+        if pos.0 >= self.rows.len() {
+            let msg = format!("row is out of range. rows len: {}, row pos: {}", self.rows.len(), pos.0);
+            return Err(Error::ModifyError(msg.into()));
+        }
+
+        let row = &self.rows[pos.0];
+        if pos.1 > row.len() {
+            let msg = format!("col is out of range. row len: {}, col pos: {}", row.len(), pos.0);
+            return Err(Error::ModifyError(msg.into()));
+        }
+
+        Ok(())
     }
 }

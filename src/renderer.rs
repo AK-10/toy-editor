@@ -1,9 +1,11 @@
 use crate::text::Text;
 use std::{error, fmt};
 use std::io::{self, stdout, Write};
+use std::cell::RefCell;
+use std::rc::Rc;
 
-pub struct Renderer<'a> {
-    text: &'a Text,
+pub struct Renderer {
+    text: Rc<RefCell<Text>>,
 }
 
 #[derive(Debug)]
@@ -29,27 +31,30 @@ impl fmt::Display for Error {
     }
 }
 
-impl<'a> Renderer<'a> {
-    pub fn new(text: &'a Text) -> Self {
+impl Renderer {
+    pub fn new(text: Rc<RefCell<Text>>) -> Self {
         Self {
             text
         }
     }
 
-    pub fn render(&self) -> Result<(), Error> {
+    pub fn render(&self, is_first: bool) -> Result<(), Error> {
         // 画面全体をクリア
         print!("\x1b[2J");
         // カーソルを左上(ホームポジション)に移動
         print!("\x1b[H");
 
-        for (i, row) in self.text.rows().iter().enumerate() {
+        for (i, row) in self.text.borrow().rows().iter().enumerate() {
             print!("{}", row);
-            if i != self.text.rows().len() - 1 {
+            if i != self.text.borrow().rows().len() - 1 {
                 print!("\x1b[E");
             }
         }
-        // カーソルを左上(ホームポジション)に移動
-        print!("\x1b[H");
+        // カーソルを左上(ホームポジション)に移動(起動時のみ)
+        if is_first {
+            print!("\x1b[H");
+        }
+
         stdout().flush()?;
 
         Ok(())

@@ -7,7 +7,7 @@ canonicalモードは行単位での入力となっており、enter(<LF>)など
 文字単位での入力にするにはrawモードにする必要があります。
 
 まずcanonicalモードでの入力を試してみます。
-https://github.com/AK-10/toy-editor/pull/1/commits/f3ffc49197ea053c1fdb9ff45cc4bc5c9d61fdbe
+commit: https://github.com/AK-10/toy-editor/pull/1/commits/f3ffc49197ea053c1fdb9ff45cc4bc5c9d61fdbe
 
 このようなコードを書いてみました
 
@@ -43,7 +43,8 @@ terminalはtermiosという構造体を利用して制御することができ�
 - 各フラグをrawモードにするために更新
 - 更新したtermiosをもとにターミナルの状態を更新
 となります。
-https://github.com/AK-10/toy-editor/pull/1/commits/817ceef2a06c63f927104591f68d03889d325c6e
+
+commit: https://github.com/AK-10/toy-editor/pull/1/commits/817ceef2a06c63f927104591f68d03889d325c6e
 
 挙動を確認してみましょう
 canonicalモードと同じような操作をすると以下のような出力になりました
@@ -83,8 +84,8 @@ term.c_lflag &= !ECHO;
 ```
 のようにすることで、特定のビットのみを立てることができます
 
-ここで無効にしたフラグとtermiosの属性を書いておきます
-rawモードではシグナルなどを送らないようにして文字入力のみにするイメージでいます(正直あまり理解できていません。)
+ここであまり深堀はしませんが、無効にしたフラグとtermiosの属性を書いておきます
+
 - c_iflag:
   入力モードフラグ. 入力の諸々を設定する
    - IGNBRK:
@@ -137,17 +138,17 @@ rawモードではシグナルなどを送らないようにして文字入力�
 control付きの文字(制御文字)は文字コードの0~31(0000_0000 ~ 0001_1111)に割り当てられています
 control + qであれば17になります
 これを判定するために `control_char` という関数を定義します
-https://github.com/AK-10/toy-editor/pull/1/commits/6f62d565c256c0f63d4ba559c5f48cd4bc627906
+commit: https://github.com/AK-10/toy-editor/pull/1/commits/6f62d565c256c0f63d4ba559c5f48cd4bc627906
 
 ## テキストを表示する
 この章では引数で指定したファイルを表示するようにします
 
 まずファイルパスを受け取り、ファイルの内容を取得部分を作成します
-https://github.com/AK-10/toy-editor/pull/2/commits/ceec7118a0bf50e7a86ab874c8e2a0470b8db054
+commit: https://github.com/AK-10/toy-editor/pull/2/commits/ceec7118a0bf50e7a86ab874c8e2a0470b8db054
 
 ファイルの内容は一旦Vec<String>として保持しておきます
 これをそのままプリントすると以下のようになります
-https://github.com/AK-10/toy-editor/pull/2/commits/1d0edda76e67199e3140a6ad29bd6a80c26c24a2
+commit: https://github.com/AK-10/toy-editor/pull/2/commits/1d0edda76e67199e3140a6ad29bd6a80c26c24a2
 
 ```
 ❯❯❯ cargo run -- examples/hello.txt
@@ -206,11 +207,11 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
 
 画面のクリアには`\x1b[2J`, カーソルを左上に移動させるには`x1b[H`を使います
 これをテキストを出力前に出力すれば良さそうです。
-https://github.com/AK-10/toy-editor/pull/2/commits/bd4c2130920ab60b018d1bf0997a17e1fee2f8f4
+commit: https://github.com/AK-10/toy-editor/pull/2/commits/bd4c2130920ab60b018d1bf0997a17e1fee2f8f4
 
 あとは適当にリファクタしておきます
-https://github.com/AK-10/toy-editor/pull/2/commits/8300c14817275155910696f4709fee5309d67360
-https://github.com/AK-10/toy-editor/pull/2/commits/e29d080a71c6031d580bc5ac236e00ee87be85b6
+commit: https://github.com/AK-10/toy-editor/pull/2/commits/8300c14817275155910696f4709fee5309d67360
+commit: https://github.com/AK-10/toy-editor/pull/2/commits/e29d080a71c6031d580bc5ac236e00ee87be85b6
 
 ## カーソルの移動
 この章ではカーソル移動を実装していきます
@@ -225,7 +226,7 @@ https://github.com/AK-10/toy-editor/pull/2/commits/e29d080a71c6031d580bc5ac236e0
 
 まず各入力を受け入れるようにしましょう
 入力を受け取る処理はすでに実装しているので、対応する分岐を書くだけで良いです
-https://github.com/AK-10/toy-editor/pull/3/commits/1c81cca0f663dc209cb76afb4abf15cb9be549fe
+commit: https://github.com/AK-10/toy-editor/pull/3/commits/1c81cca0f663dc209cb76afb4abf15cb9be549fe
 
 入力を受け取ったらctrl + hjklに対応するエスケープシーケンスを出力する必要があります
 カーソルを一つ移動させるエスケープシーケンスは
@@ -236,7 +237,7 @@ https://github.com/AK-10/toy-editor/pull/3/commits/1c81cca0f663dc209cb76afb4abf1
 
 になります。
 これをそのまま標準出力に吐けば良いです
-https://github.com/AK-10/toy-editor/pull/3/commits/e4c454a430be56bdbab0bf915ef77c786779a13f
+commit: https://github.com/AK-10/toy-editor/pull/3/commits/e4c454a430be56bdbab0bf915ef77c786779a13f
 
 これでカーソル移動ができるようになりました。
 エディタっぽくなってきましたね。
@@ -269,3 +270,114 @@ loooooooooong line!
 これでは文字列の範囲を超えてしまうので、カーソルの列を移動後の文字列の末尾に移動させるようにします
 また、これによってカーソルの移動に `\x1b[A`, `\x1b[B`, `\x1b[C`, `\x1b[D`を使うのは適切ではないので、他のエスケープシーケンスを使ったほうが良さそうです
 `\x1b[v;hH` を利用するのが良さそうなので、こちらに変更します
+
+
+## テキストへの書き込み
+この章では書き込みができるようにしていきます
+
+その前に少しリファクタをします
+今は
+- PaneがTextの(不変)参照を持っている
+- RendererがTextの(不変)参照を持っている
+という状態です
+
+これに
+- EditorがTextを持ち、書き込みを行う
+に加える予定です
+
+実装イメージ
+```
+┌─────────────────────────────────────────────────────────┐
+│  Editor                                                 │
+│                    ┌────────────┐                       │
+│                    │            │                       │
+│                    │  Terminal  │                       │
+│                    │            │                       │
+│                    └────────┬───┘                       │
+│                       ▲     │                           │
+│              read key │     │ key                       │
+│                       │     ▼                           │
+│                    ┌──┴─────────┐                       │
+│                    │            │                       │
+│                    │    run     │                       │
+│                    │            │                       │
+│                    └────────────┘                       │
+│            update    ▲   ▲   ▲    update                │
+│         ┌────────────┘   │   └─────────────┐            │
+│         │                │ write           │            │
+│         │                │                 │            │
+│         ▼                ▼                 ▼            │
+│    ┌──────────┐      ┌────────┐      ┌────────────┐     │
+│    │          │ read │        │ read │            │     │
+│    │   Pane   ├─────►│  Text  │◄─────┤  Renderer  │     │
+│    │          │      │        │      │            │     │
+│    └──────────┘      └────────┘      └────────────┘     │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+Editorの動きとしては
+- Terminalからキー入力を受取る
+- Textの文字を更新させる
+- Paneのカーソル情報を更新させる
+- Rendererに出力更新させる
+にする想定です
+
+しかしこれには問題があります
+Rustには「不変な参照をしている間は可変な参照はできない」という制約があります
+ただし、これが適用されるのはコンパイル時です。
+コンパイル時では回避しつつ、実行時に適用させるために,Rc, RefCellを使います
+- Rc: 参照カウント. 複数の所有者を許可する
+- RefCell: 借用規則を実行時に強制させる
+
+commit: https://github.com/AK-10/toy-editor/pull/4/commits/a0d29cf4917694de24bb3fbee8f573c60c2bf4a5
+
+今回対応する書き込みは
+- 文字の挿入
+- 削除(backspace)
+- 改行(enter)
+です
+
+文字の挿入は特に考えることはありません
+- カーソルの位置を受け取る
+- Textが持つ文字列に文字を挿入
+- カーソルの位置を更新
+
+とするだけです
+
+commit: https://github.com/AK-10/toy-editor/pull/4/commits/af30a4436966f3ae7fe3e53c458c876a1b6a0ad2
+
+削除は2パターンあります
+- 文字の削除
+- 行の削除
+
+カーソルが行の先頭にある場合、行を削除し、前の行と文字列を結合するようにします(一般的なエディタに見られる挙動だと思います)
+また、行削除後はもともとカーソルがあった文字の位置に動かす必要があります
+
+commit: https://github.com/AK-10/toy-editor/pull/4/commits/10d50bbbf72a83fde4e7c3b1c0900aa7bd2d23cd
+
+改行については素直に実装すれば良いと思います
+
+https://github.com/AK-10/toy-editor/pull/4/commits/d51f4597156ebdb0757705399a3df567860c9f87
+
+最後にファイルへの保存を実装します
+TextはVec<String>でデータを保持しており、改行の情報が欠落しています
+そのため、書き込み時に`\n`を追加しましょう
+あとは単純にファイルへ書き込む処理を実装すれば良いです
+
+commit: https://github.com/AK-10/toy-editor/pull/4/commits/d6dc3b626f47cc199892aa1d53038f72c13c1d37
+
+### まとめ
+Rustを使って小さなエディタを作りました。
+これを使って開発するなどはできないと思いますが、エディタのコア部分は理解できたかなと思います
+
+発展として
+- スクロールを実装する
+- エラーメッセージを表示する(status barの表示)
+- テキスト保持のためのデータ構造を変えてみる
+  - gap buffer: Emacで利用されている
+  - rope: Helix Editorで利用されている
+などがあると思います
+
+また、今回はRustで書きましたが、termios構造体が利用できればどの言語でもかけるかと思います
+自分の好みの言語で書き換えてみたり、拡張してみたりすると楽しいかもしれませんね
