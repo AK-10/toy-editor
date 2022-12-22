@@ -111,7 +111,7 @@ term.c_lflag &= !ECHO;
 
 - c_iflag:
   入力モードフラグ. 入力の諸々を設定する
-   - IGNBRK:
+  - IGNBRK:
     入力中のBREAK信号(ctrl + breakキー)を無視する.
     BREAK信号 = SIGQUIT?
   - BRKINT:
@@ -121,8 +121,8 @@ term.c_lflag &= !ECHO;
     IGNBRK,BRKINTの両方が設定されていない場合, BREAKを'\0'(ヌル文字)として読み込む。
   - PARMRK:
     INPCK が設定され、IGNPAR が設定されていない場合にのみ効果がある
-    IGNPARが設定されていない場合、パリティエラーまたはフレームエラーが発生した文字の前に'\377' '\0' を付与する
-    IGNPAR, PARMRKの両方がセットされていない場合、パリティエラーまたはフレームエラーが発生した文字を'\0'として読み込む
+    IGNPARが設定されていない場合、パリティエラーまたはフレームエラーが発生した文字の前に`'\377' '\0'` を付与する
+    IGNPAR, PARMRKの両方がセットされていない場合、パリティエラーまたはフレームエラーが発生した文字を`'\0'`として読み込む
   - ISTRIP:
     8ビット目を落とす
   - INLCR:
@@ -131,24 +131,32 @@ term.c_lflag &= !ECHO;
     入力のCRを無視する
   - ICRNL:
     IGNCRが設定されていない場合、入力のCRをNLに置き換える
+    有効の場合, ターミナルは入力の`\r`(`Enter`, `control + m`)を`\n`に置き換えてしまうので、これを無効化して、`\r`のままにする
   - IXON:
-    出力のXON/XOFFフロー制御を有効にする(よくわからない)
+    出力のXON/XOFFフロー制御を有効にする
+    XON: ソフトウェアフロー制御で`control + q` でデータの送信元に対して、送信を再開するように要求するためのコマンド。コンソールの表示を再開させるためにも使われる
+    XOFF: ソフトウェアフロー制御で`control + s`でデータの送信元に送信を一時的に止めるように要求するためのコマンド。コンソールの表示を一時停止させるためにも使われたりする
+　　
 
 - c_oflag: 出力モードフラグ
   - OPOST:
     実装に依存した出力処理を有効にする(よくわからない)
+    有効化した場合、出力の`\n`を`\r\n`に変換する
 - c_lflag: ローカルモードフラグ
   - ECHO:
-    入力された文字をエコーする. エディタでの出力はターミナルの機能で出力をしないほうが都合が良い
+    入力された文字をエコーする. エディタでの出力はターミナルの機能で出力をしないほうが都合が良いので無効化する
   - ECHONL:
     ICANONが設定されていた場合、ECHOが設定されていなくてもNL文字をエコーする
   - ICANON:
     カノニカルモードを有効にする
     特殊文字EOF, EOL, EOL2, ERASE, KILL, LNEXT, REPRINT, STATUS, WERASE 行単位バッファが有効になる。(行単位入力)
+    行単位での入力をしたくないので、無効化する
   - ISIG:
-    INTR(control + c), QUIT(control + \), SUSP, DSUSP の文字を受信した時,対応するシグナルを発生させる。
+    INTR(`control + c`), QUIT(`control + \`), SUSP(`control + z`), DSUSP の文字を受信した時,対応するシグナルを発生させる。
+    エディタでは`control + なにか` をアクションにすることがあるため、無効化する
   - IEXTEN:
     実装依存の入力処理を有効にする
+    verbatim insert(`control + v`)を無効化したいので、無効化する
 - c_cflag: 制御モードフラグ
   - CSIZE
     文字サイズを設定する
@@ -166,15 +174,15 @@ control + qであれば17になります
 https://github.com/AK-10/toy-editor/blob/6f62d565c256c0f63d4ba559c5f48cd4bc627906/src/main.rs#L5-L7
 
 
-## テキストを表示する
+## 3. テキストを表示する
 この章では引数で指定したファイルを表示するようにします
 
 まずファイルパスを受け取り、ファイルの内容を取得部分を作成します
-commit: https://github.com/AK-10/toy-editor/pull/2/commits/ceec7118a0bf50e7a86ab874c8e2a0470b8db054
+https://github.com/AK-10/toy-editor/blob/ceec7118a0bf50e7a86ab874c8e2a0470b8db054/src/main.rs#L12-L32
 
-ファイルの内容は一旦Vec<String>として保持しておきます
-これをそのままプリントすると以下のようになります
-commit: https://github.com/AK-10/toy-editor/pull/2/commits/1d0edda76e67199e3140a6ad29bd6a80c26c24a2
+ファイルの内容は一旦`Vec<String>`として保持しておきます
+これをそのままプリントすると以下のような出力になります
+https://github.com/AK-10/toy-editor/blob/1d0edda76e67199e3140a6ad29bd6a80c26c24a2/src/main.rs#L36-L39
 
 ```
 ❯❯❯ cargo run -- examples/hello.txt
@@ -188,9 +196,12 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit,
            Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 ```
 
-残念ながらrawモードではプリントを行ったあと、カーソルの行の位置がリセットされないため、次の列のプリントが前の行の文字数分スペースが入ってしまいます。
-これを回避するためにカーソルを次の行の先頭に移動させる必要があります。
-どうすればよいでしょうか？
+きれいな出力にはなりませんでした。
+println!マクロは指定した文字列に`\n`をつけたものを出力します。
+`\n`はカーソルを次の行の同じ列にカーソルを移動させます
+また、出力はカーソルの位置からおこなわれるため、このような出力になっています。
+
+各行を先頭から出力するにはどうしたら良いでしょうか？
 
 ターミナルはエスケープシーケンスを使うことで制御できます。
 例えば、カーソルの移動は
@@ -198,11 +209,12 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit,
 - 下: \x1b[B
 - 右: \x1b[C
 - 左: \x1b[D
-を入力することでカーソルを移動させることができます(\x1bはescを表します)
-エスケープシーケンスについてはhttps://www.csie.ntu.edu.tw/~r92094/c++/VT100.htmlで確認できます
+を出力することでカーソルを移動させることができます(\x1bはescを表します)
+エスケープシーケンスについてはhttps://www.csie.ntu.edu.tw/~r92094/c++/VT100.html に一覧があります。
 表を見てみると、\x1b[Eで次の行の先頭にカーソルを動かすことができそうです。
 実際にやってみましょう
-https://github.com/AK-10/toy-editor/pull/2/commits/93ea3783001fd82f8d7089b275232432477b16a0
+
+https://github.com/AK-10/toy-editor/blob/93ea3783001fd82f8d7089b275232432477b16a0/src/main.rs#L36-L42
 
 ```
 ~/w/toy-editor ❮ 22-12-08 0:49:50 ❯
@@ -233,26 +245,31 @@ Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deseru
 
 画面のクリアには`\x1b[2J`, カーソルを左上に移動させるには`x1b[H`を使います
 これをテキストを出力前に出力すれば良さそうです。
-commit: https://github.com/AK-10/toy-editor/pull/2/commits/bd4c2130920ab60b018d1bf0997a17e1fee2f8f4
+
+https://github.com/AK-10/toy-editor/blob/bd4c2130920ab60b018d1bf0997a17e1fee2f8f4/src/main.rs#L36-L40
 
 あとは適当にリファクタしておきます
 commit: https://github.com/AK-10/toy-editor/pull/2/commits/8300c14817275155910696f4709fee5309d67360
 commit: https://github.com/AK-10/toy-editor/pull/2/commits/e29d080a71c6031d580bc5ac236e00ee87be85b6
 
-## カーソルの移動
+今回は`\x1b[E`を使う実装にしましたが, この代わりに`\r\n`を出力するという方法もあります（こちらのほうが一般的かもしれません）
+- `\r`(carriage return): 行の先頭に移動
+- `\n`(new line): 次の行に移動
+
+## 4. カーソルの移動
 この章ではカーソル移動を実装していきます
 
-まず、テキトーにカーソル移動に利用するキーを決めます
+まずはカーソル移動に利用するキーを決めます。
 私はよくvimを使うので
 - ctrl + h: 左
 - ctrl + j: 下
 - ctrl + k: 上
 - ctrl + l: 右
-のようにカーソル移動するようにします
+のようにカーソル移動するように決めました。
 
 まず各入力を受け入れるようにしましょう
 入力を受け取る処理はすでに実装しているので、対応する分岐を書くだけで良いです
-commit: https://github.com/AK-10/toy-editor/pull/3/commits/1c81cca0f663dc209cb76afb4abf15cb9be549fe
+https://github.com/AK-10/toy-editor/blob/1c81cca0f663dc209cb76afb4abf15cb9be549fe/src/main.rs#L31-L39
 
 入力を受け取ったらctrl + hjklに対応するエスケープシーケンスを出力する必要があります
 カーソルを一つ移動させるエスケープシーケンスは
@@ -263,21 +280,24 @@ commit: https://github.com/AK-10/toy-editor/pull/3/commits/1c81cca0f663dc209cb76
 
 になります。
 これをそのまま標準出力に吐けば良いです
-commit: https://github.com/AK-10/toy-editor/pull/3/commits/e4c454a430be56bdbab0bf915ef77c786779a13f
+
+https://github.com/AK-10/toy-editor/blob/e4c454a430be56bdbab0bf915ef77c786779a13f/src/main.rs#L33-L41
+https://github.com/AK-10/toy-editor/blob/e4c454a430be56bdbab0bf915ef77c786779a13f/src/renderer.rs#L32-L37
+https://github.com/AK-10/toy-editor/blob/e4c454a430be56bdbab0bf915ef77c786779a13f/src/renderer.rs#L58-L77
 
 これでカーソル移動ができるようになりました。
-エディタっぽくなってきましたね。
+エディタっぽくなってきましたね！
 
 今の状態ではテキストを超えてカーソルが移動してしまいます。
-テキストの範囲内でのみカーソルが移動できるようにしてみましょう。
+このままでは意味不明なエディタになってしまうので、テキストの範囲内でのみカーソルが移動できるようにしてみましょう。
 
 - カーソルの位置を記憶しておく
 - カーソルの位置とテキストの位置を対応させる
-- カーソル移動入力を受け取ったときに、テキストの行と列の範囲を超えないかチェックし、超えない範囲であれば移動する
-を実装すれば、良さそうです
-https://github.com/AK-10/toy-editor/pull/3/commits/b32e027153f0e70268aae8ae44c0abe55768ce11
+- カーソル移動入力を受け取ったときにテキストの行と列の範囲を超えないかチェックし、超えない範囲であれば移動する
 
-注意点としては、カーソルの上下移動をしようとしたとき、単純にカーソルを上下に移動させただけでは文字範囲からはみ出すことがあります
+を実装すれば良さそうです。
+
+注意点としては、カーソルの上下移動をしようとしたとき、単純にカーソルを上下に移動させただけでは文字範囲からはみ出すことがあります。
 
 例として以下のようなテキストを考えます
 ```
@@ -288,15 +308,16 @@ loooooooooong line!
 この状態で単にカーソルを上に移動させようとすると
 
 ```
+                  v ここにカーソルが移動する
 short line.
-                  ^ ここにカーソルが移動する
 loooooooooong line!
 ```
 このようになります
-これでは文字列の範囲を超えてしまうので、カーソルの列を移動後の文字列の末尾に移動させるようにします
+これでは文字列の範囲を超えてしまって良くないので、カーソルの列を移動後の文字列の末尾に移動させるようにします
 また、これによってカーソルの移動に `\x1b[A`, `\x1b[B`, `\x1b[C`, `\x1b[D`を使うのは適切ではないので、他のエスケープシーケンスを使ったほうが良さそうです
-`\x1b[v;hH` を利用するのが良さそうなので、こちらに変更します
+`\x1b[v;hH` を利用するのが良さそうなので、こちらに変更します(v, hは行、列の位置)
 
+https://github.com/AK-10/toy-editor/pull/3/commits/b32e027153f0e70268aae8ae44c0abe55768ce11
 
 ## テキストへの書き込み
 この章では書き込みができるようにしていきます
